@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+TOP=`pwd`
+
+curl http://www.lua.org/ftp/lua-5.1.4.tar.gz -o lua-5.1.4.tar.gz
+curl http://luarocks.org/releases/luarocks-2.0.4.1.tar.gz -o luarocks-2.0.4.1.tar.gz
+tar xzf lua-5.1.4.tar.gz
+tar xzf luarocks-2.0.4.1.tar.gz
+
+cd lua-5.1.4
+sed 's/INSTALL_TOP\=/INSTALL_TOP\=\?/' Makefile > Makefile.new
+mv Makefile.new Makefile
+INSTALL_TOP=$HOME make linux install
+
+cd $TOP/luarocks-2.0.4.1
+./configure --with-lua=$TOP --prefix=$TOP --force-config
+make install
+cd $TOP
+
+export PATH=$TOP/bin
+export LUA_PATH="${TOP}/share/lua/5.1/?.lua;;"
+export LUA_CPATH="${TOP}/lib/lua/5.1/?.so;;"
+
+luarocks install luafilesystem 
+luarocks install wsapi-xavante
+
+wsapi -p80 webapp
