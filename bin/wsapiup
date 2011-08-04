@@ -1,26 +1,37 @@
 #!/usr/bin/env bash
+set -e
 TOP=`pwd`
+PLAT="linux"
+PORT=8080
 
-curl http://www.lua.org/ftp/lua-5.1.4.tar.gz -o lua-5.1.4.tar.gz
-curl http://luarocks.org/releases/luarocks-2.0.4.1.tar.gz -o luarocks-2.0.4.1.tar.gz
-tar xzf lua-5.1.4.tar.gz
-tar xzf luarocks-2.0.4.1.tar.gz
+if [ ! -e lua-5.1.4.tar.gz ]
+then
+   curl http://www.lua.org/ftp/lua-5.1.4.tar.gz -o lua-5.1.4.tar.gz
+   tar xzf lua-5.1.4.tar.gz
+fi
+
+if [ ! -e luarocks-2.0.4.1.tar.gz ]
+then
+   curl http://luarocks.org/releases/luarocks-2.0.4.1.tar.gz -o luarocks-2.0.4.1.tar.gz
+   tar xzf luarocks-2.0.4.1.tar.gz
+fi
 
 cd lua-5.1.4
-sed 's/INSTALL_TOP\=/INSTALL_TOP\=\?/' Makefile > Makefile.new
+sed "s/INSTALL_TOP\=/INSTALL_TOP\?\=/" Makefile > Makefile.new
 mv Makefile.new Makefile
-INSTALL_TOP=$HOME make linux install
+INSTALL_TOP=$TOP make $PLAT
+INSTALL_TOP=$TOP make install
 
 cd $TOP/luarocks-2.0.4.1
-./configure --with-lua=$TOP --prefix=$TOP --force-config
+./configure --with-lua=$TOP --prefix=$TOP --sysconfdir=$TOP/luarocks --force-config
 make install
 cd $TOP
 
-export PATH=$TOP/bin
+export PATH=$TOP/bin:$PATH
 export LUA_PATH="${TOP}/share/lua/5.1/?.lua;;"
 export LUA_CPATH="${TOP}/lib/lua/5.1/?.so;;"
 
 luarocks install luafilesystem 
 luarocks install wsapi-xavante
 
-wsapi -p80 webapp
+wsapi -p$PORT webapp
